@@ -6,6 +6,8 @@ export default class MainScene extends Phaser.Scene {
     private score = 0;
     private scoreText: Phaser.GameObjects.Text;
     private bombs: Phaser.Physics.Arcade.Group;
+    private lives = 1;
+    private livesText: Phaser.GameObjects.Text;
 
 
     constructor() {
@@ -90,8 +92,11 @@ export default class MainScene extends Phaser.Scene {
 
         //Bombas
         this.bombs = this.physics.add.group();
-        this.physics.add.collider(this.bombs, this.platforms);//Añade coliision con las bombas
-        this.physics.add.overlap(this.player, this.bombs, this.handleHitBomb, undefined, this);//que pasa al tocarse
+        this.physics.add.collider(this.bombs, this.platforms);//Añade colision con las bombas
+        this.physics.add.collider(this.player, this.bombs, this.handleHitBomb, undefined, this);//que pasa al tocarse
+
+        //Texto para las vidas
+        this.livesText = this.add.text(16, 48, 'Vidas: 1', { fontSize: '32px' });
 
     }
     /**
@@ -132,7 +137,7 @@ export default class MainScene extends Phaser.Scene {
             });
 
             const x = (this.player.x < 400) //Coordenada aleatoria opuesta al jugador
-                ? Phaser.Math.Between(400, 800) 
+                ? Phaser.Math.Between(400, 800)
                 : Phaser.Math.Between(0, 400);
             //Física de la bomba
             const bomb: Phaser.Physics.Arcade.Image = this.bombs.create(x, 16, 'bomb');
@@ -141,10 +146,27 @@ export default class MainScene extends Phaser.Scene {
             bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
         }
     }
-
-    private handleHitBomb(player: Phaser.GameObjects.GameObject, b: Phaser.GameObjects.GameObject){
-        this.physics.pause();//Detiene el juego
-        this.player.setTint(0xff0000);//Pinta al personaje en rojo
-        this.player.anims.play('turn');
+    /**
+     * Método que indica que pasa cuando el jugador y una bomba se tocan.
+     * He añadido que desaparezca la bomba por que me parecía más lógico.
+     * Si no paraba el salto de la bomba no me dejaba desactivarla.
+     * @param player 
+     * @param b 
+     */
+    private handleHitBomb(player: Phaser.GameObjects.GameObject, b: Phaser.GameObjects.GameObject) {
+        const bomb = b as Phaser.Physics.Arcade.Image;
+        bomb.disableBody(true,true);
+        bomb.setBounce(0);
+        if (this.lives > 0) {
+            this.lives -= 1;
+            this.livesText.setText('Vidas: ' + this.lives);
+            this.player.setTint(0xfffe01);//Pinta al personaje de amarillo
+            
+            
+        } else {
+            this.physics.pause();//Detiene el juego
+            this.player.setTint(0xff0000);//Pinta al personaje en rojo
+            this.player.anims.play('turn');
+        }
     }
 }

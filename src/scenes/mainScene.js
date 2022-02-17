@@ -20,6 +20,7 @@ var MainScene = /** @class */ (function (_super) {
     function MainScene() {
         var _this = _super.call(this, 'MainScene') || this;
         _this.score = 0;
+        _this.lives = 1;
         return _this;
     }
     /**
@@ -92,8 +93,10 @@ var MainScene = /** @class */ (function (_super) {
         this.scoreText = this.add.text(16, 16, 'Puntos: 0', { fontSize: '32px' });
         //Bombas
         this.bombs = this.physics.add.group();
-        this.physics.add.collider(this.bombs, this.platforms); //Añade coliision con las bombas
-        this.physics.add.overlap(this.player, this.bombs, this.handleHitBomb, undefined, this); //que pasa al tocarse
+        this.physics.add.collider(this.bombs, this.platforms); //Añade colision con las bombas
+        this.physics.add.collider(this.player, this.bombs, this.handleHitBomb, undefined, this); //que pasa al tocarse
+        //Texto para las vidas
+        this.livesText = this.add.text(16, 48, 'Vidas: 1', { fontSize: '32px' });
     };
     /**
      * Actua en consecuencia de las acciones del usuario
@@ -139,10 +142,27 @@ var MainScene = /** @class */ (function (_super) {
             bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
         }
     };
+    /**
+     * Método que indica que pasa cuando el jugador y una bomba se tocan.
+     * He añadido que desaparezca la bomba por que me parecía más lógico.
+     * Si no paraba el salto de la bomba no me dejaba desactivarla.
+     * @param player
+     * @param b
+     */
     MainScene.prototype.handleHitBomb = function (player, b) {
-        this.physics.pause(); //Detiene el juego
-        this.player.setTint(0xff0000); //Pinta al personaje en rojo
-        this.player.anims.play('turn');
+        var bomb = b;
+        bomb.disableBody(true, true);
+        bomb.setBounce(0);
+        if (this.lives > 0) {
+            this.lives -= 1;
+            this.livesText.setText('Vidas: ' + this.lives);
+            this.player.setTint(0xfffe01); //Pinta al personaje de amarillo
+        }
+        else {
+            this.physics.pause(); //Detiene el juego
+            this.player.setTint(0xff0000); //Pinta al personaje en rojo
+            this.player.anims.play('turn');
+        }
     };
     return MainScene;
 }(Phaser.Scene));
